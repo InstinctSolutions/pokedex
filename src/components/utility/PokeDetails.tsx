@@ -3,10 +3,8 @@ import { createStyles, makeStyles, Theme, withStyles } from '@material-ui/core/s
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardActionArea from '@material-ui/core/CardActionArea';
-import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
-import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import useAxios from 'axios-hooks';
 import { ENDPOINT } from '../../@utils/config/pokeapi';
@@ -52,7 +50,7 @@ const BorderLinearProgress = withStyles((theme: Theme) =>
     root: {
       height: 15,
       borderRadius: 5,
-      width: '90%'
+      width: '80%'
     },
     colorPrimary: {
       backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
@@ -75,45 +73,32 @@ const PokeDetails: React.FC<PokeProps> = (props: PokeProps) => {
     const [{ data: genderData, loading: genderLoad }] = useAxios({
         url: `${ENDPOINT}/pokemon/${props.poke_name}/`,
         method: 'GET'
-    });
+    }, 
+    {
+        useCache: true
+    }
+    );
 
     const [{data: encounterLocationData, loading: encounterLocationLoading}] = useAxios({
         url: `${ENDPOINT}/pokemon/${props.poke_name}/encounters`,
+    }, {
+        useCache: true
     });
 
-    // const [{data: locationArea, loading:locationLoading}, executeLocationArea] = useAxios({
-    //     method: 'GET'
-    // }, {
-    //     manual: true
-    // })
-
     const [state, setState] = useState<object>({})
-
-    // const getLocation = (areas: Array<string>) => {
-    //     areas.map((item, key) => {
-    //         executeLocationArea({
-    //             url: `${ENDPOINT}/location-area/${item}/`
-    //         })
-    //     });
-    // }
 
     useEffect(() => {
         if(encounterLocationData) {
             handlePokemonEncounters(encounterLocationData)
-            // getLocation(encouterData);
         }
         
     }, [encounterLocationData]);
 
-    // useEffect(() => {
-    //     if(locationArea) {
-    //         console.log(locationArea);
-    //     }
-    // }, [locationArea]);
 
     useEffect(() => {
         if(genderData) {
             setState({
+                id: genderData.id,
                 type: genderData.types[0].type.name,
                 healthPoint: genderData.stats[0].base_stat,
                 attack: genderData.stats[1].base_stat,
@@ -122,9 +107,7 @@ const PokeDetails: React.FC<PokeProps> = (props: PokeProps) => {
                 specialDefense: genderData.stats[4].base_stat,
                 speed: genderData.stats[5].base_stat,
             })
-            // console.log(genderData)
         }
-        
     }, [genderData]);
 
     return (
@@ -133,7 +116,7 @@ const PokeDetails: React.FC<PokeProps> = (props: PokeProps) => {
             <CardHeader
                 avatar={
                     <Avatar aria-label="recipe" className={classes.avatar}>
-                        {props.poke_id}
+                        {genderLoad ? 'Loading ...' : genderData && state ? genderData.id: 'Rendering'}
                     </Avatar>
                 }
                 title={props.poke_name}
@@ -144,7 +127,7 @@ const PokeDetails: React.FC<PokeProps> = (props: PokeProps) => {
                     component="img"
                     alt={props.poke_name}
                     height="140"
-                    image={require(`../../assets/images/${props.poke_id}.png`)}
+                    image={genderLoad && state ? 'Loading ...': require(`../../assets/images/${genderData ? genderData.id <= 151 ? genderData.id: 'no-image': 'no-image'}.png`) }
                     title={props.poke_name}
                     className={classes.image}
                 />
@@ -219,18 +202,10 @@ const PokeDetails: React.FC<PokeProps> = (props: PokeProps) => {
                     {
                         encounterLocationLoading ?
                         'Loading ...':   
-                        <Link onClick={(e: any) => {setOpen(true); e.persist()  }} style={{cursor: 'pointer'}}>View Locations</Link>
+                        <Link onClick={(e: any) => {setOpen(true); e.persist()  }} style={{cursor: 'pointer'}}>View Encounter Locations</Link>
                     }
                 </div>
             </CardContent>
-            <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-                <Button size="small" color="primary">
-                    Learn More
-                </Button>
-            </CardActions>
         </Card>
         <DialogComponent open={open} setOpen={setOpen} pokeName={props.poke_name}></DialogComponent>
         </>

@@ -1,67 +1,53 @@
-import { List, ListItem, ListItemIcon, ListItemText, makeStyles, Theme } from '@material-ui/core';
-import React, { useEffect } from 'react';
-import LocationOnIcon from '@material-ui/icons/LocationOn';
+import { CircularProgress, ListItem, ListItemIcon, ListItemText } from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
 import useAxios from 'axios-hooks';
-// import { ENDPOINT } from '../../@utils/config/pokeapi';
-
-const useStyles = makeStyles<Theme>((theme: Theme) => ({
-    title: {
-        backgroundColor: theme.palette.background.paper,
-    },
-    demo: {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start'
-    }
-}))
+import { ENDPOINT } from '../../@utils/config/pokeapi';
+import LocationOnIcon from '@material-ui/icons/LocationOn';
+import CancelIcon from '@material-ui/icons/Cancel';
 
 interface LocationProp {
-    location_area_name: Array<string>
+    location_area_name: string
 }
 
 const LocationComponent: React.FC<LocationProp> = (props: LocationProp) => {
-    const classes = useStyles();
-    
-    const [{data: locationData }, executeLocation] = useAxios({
-        
+    const [region, setRegion] = useState<string>('')
+    const [{data: locationAreaData }] = useAxios({
+        url: `${ENDPOINT}/location-area/${props.location_area_name}`,
         method: 'GET'
-    }, {
-        manual: true
     });
 
-    useEffect(() => {
-        
-    }, [props.location_area_name, executeLocation])
+    const [{data: locationData, loading: locationLoading}, executeLocation] = useAxios({
+        method: 'GET'
+    }, 
+    {
+        manual: true
+    }
+    );
 
     useEffect(() => {
-        
-        if(locationData){
-            console.log(locationData);
+        if(locationData) {
+            setRegion(locationData.region.name);
+        }
+    }, [locationData])
+
+    useEffect(() => {
+        if(locationAreaData) {
+            executeLocation({
+                url: `${ENDPOINT}/location/${locationAreaData.location.name}`,
+            })
         }
 
-    }, [locationData])
+    }, [locationAreaData, executeLocation])
 
     return (
         <>
-          <div className={classes.demo}>
-            {props.location_area_name.length === 0 && (<>No Locations</>)}
-            {props.location_area_name.length > 0 && (
-                <List dense={true}>
-                {
-                    props.location_area_name.map((item: any, key) => {
-                      return <ListItem key={key}>
-                      <ListItemIcon>
-                        <LocationOnIcon />
-                      </ListItemIcon>
-                      <ListItemText>{item.location_area.name}</ListItemText>
-                  </ListItem>
-                    })
-                }
-              </List>
-            )}
-            
-          </div>
+            <ListItem>
+                <ListItemIcon>
+                {region === 'kanto' ? <LocationOnIcon style={{color: 'blue'}} />: <CancelIcon style={{color: 'red'}}/>}
+                </ListItemIcon>
+                {locationLoading && <CircularProgress color="inherit" />}
+                {!locationLoading && <ListItemText>{region === 'kanto' ? props.location_area_name: '-'}</ListItemText>}
+            </ListItem>
         </>
     )
 }
