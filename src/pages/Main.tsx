@@ -34,7 +34,8 @@ const Main: React.FC = () => {
         url: `${ENDPOINT}/pokemon/`,
         method: 'GET',
         params: {
-            limit: 151
+            limit: 40,
+            offset: 40
         }
     }, {
         manual: true
